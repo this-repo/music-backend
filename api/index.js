@@ -8,7 +8,7 @@ const app = express();
 // Contoh: https://raw.githubusercontent.com/username/repo/main/songs.json
 const GITHUB_RAW_URL =
     process.env.GITHUB_SONGS_URL ||
-    "https://github.com/this-repo/music-db/blob/main/metadata/music.json";
+    "https://raw.githubusercontent.com/this-repo/music-db/refs/heads/main/metadata/music.json";
 
 // Cache sederhana agar tidak fetch GitHub setiap request
 let cache = {
