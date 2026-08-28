@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "album": "A Night at the Opera",
+    "year": 1975,
+    "url": "https://example.com/bohemian-rhapsody.mp3"
+  },
+  {
+    "id": 2,
+    "title": "Hotel California",
+    "artist": "Eagles",
+    "album": "Hotel California",
+    "year": 1977,
+    "url": "https://example.com/hotel-california.mp3"
+  },
+  {
+    "id": 3,
+    "title": "Imagine",
+    "artist": "John Lennon",
+    "album": "Imagine",
+    "year": 1971,
+    "url": "https://example.com/imagine.mp3"
+  }
+]

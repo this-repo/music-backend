@@ -1,0 +1,6 @@
+my-songs-api/
+├── api/
+│   └── index.js          ← Entry point (Serverless Function Vercel)
+├── package.json
+├── vercel.json           ← Konfigurasi routing Vercel
+└── .gitignore
