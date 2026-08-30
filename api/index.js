@@ -54,10 +54,24 @@ async function getSongs() {
 
 // Health check
 app.get("/", (_req, res) => {
-    res.json({
-        status: "ok",
-        message: "Songs API is running 🎵",
-        endpoints: ["/api/songs"],
+    res.status(200).json({
+        success: true,
+        code: 200,
+        name: "Songs API Hub",
+        version: "1.0.0",
+        message: "Songs API is running",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+        endpoints: {
+            getAllSongs: "/api/songs",
+            getSongByName: "/api/songs?q={name}"
+        },
+        documentation: "#",
+        maintainer: {
+            name: "RyuXyro",
+            github: "https://github.com/ryuxyro",
+            role: "Lead Developer & Founder"
+        }
     });
 });
 
