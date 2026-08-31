@@ -117,7 +117,7 @@ async function getSongs() {
     }
 
     const sources = MUSIC_SOURCES.length ? MUSIC_SOURCES : DEFAULT_MUSIC_URLS;
-    const songSets = await Promise.all(
+    const results = await Promise.allSettled(
         sources.map(async (url) => {
             const res = await fetch(url);
 
@@ -129,6 +129,32 @@ async function getSongs() {
             return normalizeSongsPayload(payload);
         })
     );
+
+    const songSets = [];
+    const failedSources = [];
+
+    results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+            songSets.push(result.value);
+        } else {
+            failedSources.push({
+                url: sources[index],
+                message: result.reason?.message || "Unknown fetch error",
+            });
+        }
+    });
+
+    if (!songSets.length) {
+        throw new Error(
+            failedSources.length
+                ? `Semua sumber gagal: ${failedSources.map((item) => `${item.url} (${item.message})`).join("; ")}`
+                : "Tidak ada data lagu yang berhasil diambil."
+        );
+    }
+
+    if (failedSources.length) {
+        console.warn("Beberapa sumber music gagal diambil:", failedSources);
+    }
 
     const songs = mergeSongs(songSets);
 
