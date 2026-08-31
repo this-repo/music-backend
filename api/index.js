@@ -4,11 +4,55 @@ const cors = require("cors");
 const app = express();
 
 // ─── Konfigurasi ───────────────────────────────────────────────
-// Ganti URL ini dengan path raw file songs.json di repo GitHub Anda
-// Contoh: https://raw.githubusercontent.com/username/repo/main/songs.json
-const GITHUB_RAW_URL =
-    process.env.GITHUB_SONGS_URL ||
-    "https://raw.githubusercontent.com/this-repo/music-db/refs/heads/main/metadata/music.json";
+// Dukung 1 atau lebih URL music.json.
+// Contoh env:
+// GITHUB_SONGS_URL=https://.../music.json
+// GITHUB_SONGS_URLS=https://.../music-a.json,https://.../music-b.json
+// GITHUB_SONGS_URLS=["https://.../a.json","https://.../b.json"]
+const DEFAULT_MUSIC_URLS = [
+    "https://raw.githubusercontent.com/this-repo/music-db/refs/heads/main/metadata/music.json",
+    "https://raw.githubusercontent.com/this-repo/music-db-v2/refs/heads/main/metadata/music.json"
+];
+
+function parseMusicSources(rawValue) {
+    if (!rawValue) return [];
+
+    if (Array.isArray(rawValue)) {
+        return rawValue
+            .map((value) => String(value).trim())
+            .filter(Boolean);
+    }
+
+    if (typeof rawValue !== "string") {
+        return [String(rawValue).trim()].filter(Boolean);
+    }
+
+    const trimmed = rawValue.trim();
+    if (!trimmed) return [];
+
+    try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+            return parsed
+                .map((value) => String(value).trim())
+                .filter(Boolean);
+        }
+        if (typeof parsed === "string" && parsed.trim()) {
+            return [parsed.trim()];
+        }
+    } catch (_error) {
+        // Jika bukan JSON, lanjutkan ke parsing CSV.
+    }
+
+    return trimmed
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+}
+
+const MUSIC_SOURCES = parseMusicSources(
+    process.env.GITHUB_SONGS_URLS || process.env.GITHUB_SONGS_URL || DEFAULT_MUSIC_URLS
+);
 
 // Cache sederhana agar tidak fetch GitHub setiap request
 let cache = {
@@ -27,6 +71,43 @@ app.use(
 );
 
 // ─── Helper: Fetch & Cache ─────────────────────────────────────
+function normalizeSongsPayload(payload) {
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+
+    if (payload && Array.isArray(payload.songs)) {
+        return payload.songs;
+    }
+
+    if (payload && Array.isArray(payload.data)) {
+        return payload.data;
+    }
+
+    if (payload && Array.isArray(payload.tracks)) {
+        return payload.tracks;
+    }
+
+    return [];
+}
+
+function mergeSongs(songLists) {
+    const merged = new Map();
+
+    for (const songs of songLists) {
+        for (const song of songs) {
+            if (!song || typeof song !== "object") continue;
+
+            const key = song.id || `${song.title || "untitled"}|${song.artist || "unknown"}|${song.url || ""}`;
+            if (!merged.has(key)) {
+                merged.set(key, song);
+            }
+        }
+    }
+
+    return Array.from(merged.values());
+}
+
 async function getSongs() {
     const now = Date.now();
 
@@ -35,13 +116,21 @@ async function getSongs() {
         return cache.data;
     }
 
-    const res = await fetch(GITHUB_RAW_URL);
+    const sources = MUSIC_SOURCES.length ? MUSIC_SOURCES : DEFAULT_MUSIC_URLS;
+    const songSets = await Promise.all(
+        sources.map(async (url) => {
+            const res = await fetch(url);
 
-    if (!res.ok) {
-        throw new Error(`GitHub fetch gagal: ${res.status} ${res.statusText}`);
-    }
+            if (!res.ok) {
+                throw new Error(`GitHub fetch gagal untuk ${url}: ${res.status} ${res.statusText}`);
+            }
 
-    const songs = await res.json();
+            const payload = await res.json();
+            return normalizeSongsPayload(payload);
+        })
+    );
+
+    const songs = mergeSongs(songSets);
 
     // Simpan ke cache
     cache.data = songs;
@@ -62,6 +151,7 @@ app.get("/", (_req, res) => {
         message: "Songs API is running",
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || "development",
+        sources: MUSIC_SOURCES.length ? MUSIC_SOURCES : DEFAULT_MUSIC_URLS,
         endpoints: {
             getAllSongs: "/api/songs",
             getSongByName: "/api/songs?q={name}"
