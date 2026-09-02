@@ -248,8 +248,19 @@ app.get("/api/songs", async (req, res) => {
     }
 });
 
-app.get("/website", (_req, res) => {
-    res.redirect("/index.html");
+// 🔹 Rute /website - sajikan index.html dari folder views
+app.get("/website", (req, res) => {
+    const filePath = path.join(__dirname, "../views/index.html");
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(404).send("Halaman tidak ditemukan");
+        }
+    });
+});
+
+// 🔹 Cegah akses langsung ke /index.html (redirect ke /website)
+app.get("/index.html", (req, res) => {
+    res.redirect("/website");
 });
 
 // ─── Export untuk Vercel Serverless ────────────────────────────
