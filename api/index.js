@@ -183,11 +183,18 @@ app.get("/", (_req, res) => {
             getSongByName: "/api/songs?q={name}"
         },
         documentation: "#",
-        maintainer: {
-            name: "RyuXyro",
-            github: "https://github.com/ryuxyro",
-            role: "Lead Developer & Founder"
-        }
+        maintainers: [
+            {
+                name: "RyuXyro",
+                github: "https://github.com/ryuxyro",
+                role: "Lead Developer & Founder"
+            },
+            {
+                name: "RceStudioGM",
+                github: "https://github.com/RceStudioGM",
+                role: "Helper & Maintainer"
+            }
+        ]
     });
 });
 
@@ -239,6 +246,10 @@ app.get("/api/songs", async (req, res) => {
             detail: err.message,
         });
     }
+});
+
+app.get("/website", (_req, res) => {
+    res.redirect("/index.html");
 });
 
 // ─── Export untuk Vercel Serverless ────────────────────────────
