@@ -178,7 +178,6 @@ app.get("/", (_req, res) => {
         message: "Songs API is running",
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || "development",
-        sources: MUSIC_SOURCES.length ? MUSIC_SOURCES : DEFAULT_MUSIC_URLS,
         endpoints: {
             getAllSongs: "/api/songs",
             getSongByName: "/api/songs?q={name}",
