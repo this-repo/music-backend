@@ -181,7 +181,8 @@ app.get("/", (_req, res) => {
         sources: MUSIC_SOURCES.length ? MUSIC_SOURCES : DEFAULT_MUSIC_URLS,
         endpoints: {
             getAllSongs: "/api/songs",
-            getSongByName: "/api/songs?q={name}"
+            getSongByName: "/api/songs?q={name}",
+            apiWebsite: "/website"
         },
         documentation: "#",
         maintainers: [
